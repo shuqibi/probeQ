@@ -21,11 +21,11 @@ A lightweight macOS menu bar utility that lets you grab text from anywhere on yo
 
 ## Demo
 
-### OCR Capture
-![OCR Demo](gif_demo/ocr_demo.gif)
+### 🔎 <mark> OCR Capture </mark>
+<img src="gif_demo/ocr_demo.gif" width="70%" alt="OCR Demo" />
 
-### Text Selection
-![Text Selection Demo](gif_demo/text_select_demo.gif)
+### 🪄 <mark> Text Selection </mark>
+<img src="gif_demo/text_select_demo.gif" width="70%" alt="Text Selection Demo" />
 
 ## Setup
 

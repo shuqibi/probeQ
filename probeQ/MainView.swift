@@ -54,6 +54,15 @@ struct ChatInputView: NSViewRepresentable {
                 onSubmit()
                 return true
             }
+            
+            // ESC key to close window
+            if commandSelector == #selector(NSResponder.cancelOperation(_:)) {
+                DispatchQueue.main.async {
+                    AppDelegate.shared?.chatWindow?.close()
+                }
+                return true
+            }
+            
             return false
         }
         
@@ -208,5 +217,8 @@ struct MainView: View {
             .background(Color(NSColor.windowBackgroundColor))
         }
         .frame(minWidth: 420, minHeight: 550)
+        .onExitCommand {
+            AppDelegate.shared?.chatWindow?.close()
+        }
     }
 }

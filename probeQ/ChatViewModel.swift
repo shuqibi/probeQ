@@ -65,6 +65,7 @@ class ChatViewModel: ObservableObject {
     }
     
     func clearHistory() {
+        self.sessionId = UUID()
         messages.removeAll()
         errorMessage = nil
         inputText = ""

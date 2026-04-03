@@ -20,6 +20,21 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMenuDele
         requestAccessibilityPermissions()
         setupMenuBar()
         setupShortcuts()
+        
+        // Globally catch ESC key when app is active
+        NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            if event.keyCode == 53 { // ESC key
+                if let chatWin = AppDelegate.shared.chatWindow, chatWin.isKeyWindow {
+                    AppDelegate.shared.closeChatWindow()
+                    return nil
+                }
+                if let setWin = AppDelegate.shared.settingsWindow, setWin.isKeyWindow {
+                    setWin.close()
+                    return nil
+                }
+            }
+            return event
+        }
     }
     
     private func requestAccessibilityPermissions() {
@@ -208,8 +223,8 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMenuDele
             chatViewModel.messages = session.messages
             chatViewModel.errorMessage = nil
             chatViewModel.inputText = ""
-        } else if chatWindow == nil {
-            // New chat invoked without window -> clear
+        } else {
+            // ALWAYS clear history and start fresh when invoked without a session
             chatViewModel.clearHistory()
         }
         
@@ -241,11 +256,18 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMenuDele
     // Auto-save history when window closes
     func windowDidClose(_ notification: Notification) {
         guard notification.object as? NSWindow == chatWindow else { return }
+        closeChatWindow()
+    }
+    
+    @objc func closeChatWindow() {
+        guard let window = chatWindow else { return }
         
         if !chatViewModel.messages.isEmpty {
             HistoryManager.shared.saveSession(id: chatViewModel.sessionId, messages: chatViewModel.messages)
         }
         chatViewModel.clearHistory()
+        
+        window.orderOut(nil)
         chatWindow = nil
     }
     

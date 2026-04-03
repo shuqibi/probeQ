@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="probeQ/Assets.xcassets/AppIcon.appiconset/prQ-256.png" width="128" alt="probeQ Icon" />
+</p>
+
 # probeQ
 
 > Built primarily through vibe coding 🎵

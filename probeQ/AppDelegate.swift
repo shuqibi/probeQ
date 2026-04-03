@@ -173,9 +173,10 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMenuDele
         let pasteboard = NSPasteboard.general
         let initialCount = pasteboard.changeCount
         
-        // 1. Force release of physical modifier keys to prevent them from interfering with Cmd+C
+        // 1. Force release of physical modifier keys AND the 'C' key to prevent them from interfering with Cmd+C
+        // (If the user's custom shortcut uses 'C', the OS will ignore our synthetic 'C' because it thinks it's already pressed down)
         let src = CGEventSource(stateID: .hidSystemState)
-        let modifiers: [CGKeyCode] = [54, 55, 56, 58, 59, 60, 61, 62] // Right/Left versions of Cmd, Shift, Opt, Ctrl
+        let modifiers: [CGKeyCode] = [54, 55, 56, 58, 59, 60, 61, 62, 0x08] // Right/Left versions of Cmd, Shift, Opt, Ctrl, plus the 'C' key
         for mod in modifiers {
             let keyUp = CGEvent(keyboardEventSource: src, virtualKey: mod, keyDown: false)
             keyUp?.post(tap: .cghidEventTap)

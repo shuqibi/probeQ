@@ -19,13 +19,6 @@ class ChatViewModel: ObservableObject {
         self.messages = initialMessages
     }
     
-    // Converts Message array into Gemini API format
-    private var geminiHistory: [[String: Any]] {
-        messages.map { msg in
-            ["role": msg.role, "parts": [["text": msg.parts]]]
-        }
-    }
-    
     func sendMessage(_ text: String, prefixPrompt: String? = nil) {
         let actualText = prefixPrompt != nil ? "\(prefixPrompt!):\n\n\(text)" : text
         messages.append(Message(role: "user", parts: actualText))
@@ -39,20 +32,25 @@ class ChatViewModel: ObservableObject {
         errorMessage = nil
         
         let settings = SettingsManager.shared
-        let currentHistory = geminiHistory
+        
+        // Take a snapshot of current messages to safely pass to background task
+        let currentMessages = messages
         
         Task {
             do {
                 guard !settings.apiKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-                    errorMessage = "Please enter your Gemini API Key in Settings."
+                    errorMessage = "Please enter your API Key in Settings."
                     isWaitingForResponse = false
                     return
                 }
                 
-                let responseText = try await GeminiAPI.shared.generateContent(
-                    messages: currentHistory,
+                let responseText = try await LLMManager.shared.generateContent(
+                    messages: currentMessages,
+                    provider: settings.apiProvider,
+                    customURL: settings.customBaseURL,
                     apiKey: settings.apiKey,
-                    modelName: settings.modelName
+                    modelName: settings.modelName,
+                    systemPrompt: "You are a helpful, extremely concise, fast macOS AI assistant. Prefer direct answers. Ignore markdown bloat as much as possible unless necessary for readability."
                 )
                 
                 messages.append(Message(role: "model", parts: responseText))

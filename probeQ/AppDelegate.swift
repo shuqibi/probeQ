@@ -241,6 +241,7 @@ class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate, NSMenuDele
             )
             window.contentView = hostingView
             window.center()
+            window.setFrameAutosaveName("probeQMainChatWindow")
             window.isReleasedWhenClosed = false
             window.delegate = self
             chatWindow = window

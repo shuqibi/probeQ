@@ -16,7 +16,7 @@ class OCRManager {
         // Execute macOS native screencapture tool
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/sbin/screencapture")
-        process.arguments = ["-i", tempURL.path]
+        process.arguments = ["-i", "-x", tempURL.path]
         
         try process.run()
         process.waitUntilExit()

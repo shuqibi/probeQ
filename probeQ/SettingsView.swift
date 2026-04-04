@@ -161,19 +161,27 @@ struct SettingsView: View {
 struct GeneralTab: View {
     @ObservedObject var settings: SettingsManager
     
+    @State private var draftProvider: String
+    @State private var previousProvider: String
+    @State private var draftCustomURL: String
     @State private var draftApiKey: String
     @State private var draftModelName: String
     @State private var draftHistoryLimit: Int
-    @State private var availableModels: [GeminiModelInfo] = []
+    @State private var availableModels: [LLMModelInfo] = []
     
     init(settings: SettingsManager) {
         self.settings = settings
+        _draftProvider = State(initialValue: settings.apiProvider)
+        _previousProvider = State(initialValue: settings.apiProvider)
+        _draftCustomURL = State(initialValue: settings.customBaseURL)
         _draftApiKey = State(initialValue: settings.apiKey)
         _draftModelName = State(initialValue: settings.modelName)
         _draftHistoryLimit = State(initialValue: settings.historyLimit)
     }
     
     var hasChanges: Bool {
+        draftProvider != settings.apiProvider ||
+        draftCustomURL != settings.customBaseURL ||
         draftApiKey != settings.apiKey ||
         draftModelName != settings.modelName ||
         draftHistoryLimit != settings.historyLimit
@@ -182,25 +190,75 @@ struct GeneralTab: View {
     var body: some View {
         VStack {
             Form {
-                Section("API Configuration") {
-                    SecureField("Gemini API Key", text: $draftApiKey)
-                    Picker("Model Selector", selection: $draftModelName) {
-                        if availableModels.isEmpty {
-                            Text(draftModelName.isEmpty ? "No Models Found / Enter API Key" : draftModelName)
-                                .tag(draftModelName)
-                        } else {
-                            ForEach(availableModels) { model in
-                                Text(model.displayName).tag(model.name)
-                            }
-                        }
+                Section(header: Text("API Configuration").font(.headline).fontWeight(.bold).foregroundColor(.primary)) {
+                    Picker("API Provider", selection: $draftProvider) {
+                        Text("Select a Provider...").tag("none")
+                        Text("Google Gemini").tag("gemini")
+                        Text("DeepSeek").tag("deepseek")
+                        Text("Zhipu (GLM)").tag("zhipu")
+                        Text("Qwen (Aliyun)").tag("qwen")
+                        Text("OpenAI").tag("openai")
+                        Text("Moonshot (Kimi)").tag("moonshot")
+                        Text("Groq (Llama/Mixtral)").tag("groq")
+                        Text("Grok (xAI)").tag("grok")
+                        Text("Custom (OpenAI Compatible)").tag("custom")
                     }
                     .pickerStyle(MenuPickerStyle())
-                    .help("Select the AI model. Dynamically fetched from Google.")
+                    
+                    if draftProvider != "none" {
+                        if draftProvider == "custom" {
+                            TextField("Base URL (e.g. http://localhost:11434/v1)", text: $draftCustomURL)
+                        }
+                        
+                        HStack {
+                            SecureField("API Key", text: $draftApiKey)
+                            Button(action: {
+                                draftApiKey = ""
+                                settings.setProviderAPIKey("", for: draftProvider)
+                            }) {
+                                Image(systemName: "trash")
+                                    .foregroundColor(.red)
+                            }
+                            .buttonStyle(.plain)
+                            .help("Clear API Key for this brand")
+                        }
+                        
+                        HStack {
+                            TextField("Model Selector (Type or use Presets)", text: $draftModelName)
+                            
+                            if !availableModels.isEmpty {
+                                Menu("Presets") {
+                                    ForEach(availableModels) { model in
+                                        Button(model.displayName) {
+                                            draftModelName = model.name
+                                        }
+                                    }
+                                }
+                                .frame(width: 80)
+                            }
+                        }
+                        .help("Type a custom model ID, or select one from the Presets menu dynamically fetched from the provider.")
+                    }
                 }
-                .task(id: draftApiKey) {
-                    guard !draftApiKey.isEmpty else { return }
+                .onChange(of: draftProvider) { newProvider in
+                    if previousProvider != "none" {
+                        settings.setProviderAPIKey(draftApiKey, for: previousProvider)
+                        settings.setProviderModel(draftModelName, for: previousProvider)
+                        settings.setProviderBaseURL(draftCustomURL, for: previousProvider)
+                    }
+                    if newProvider != "none" {
+                        draftApiKey = settings.getProviderAPIKey(newProvider)
+                        draftModelName = settings.getProviderModel(newProvider)
+                        draftCustomURL = settings.getProviderBaseURL(newProvider)
+                        availableModels = []
+                    }
+                    previousProvider = newProvider
+                }
+                .task(id: "\(draftProvider)-\(draftCustomURL)-\(draftApiKey)") {
+                    guard draftProvider != "none" && !draftApiKey.isEmpty else { return }
+                    // Re-fetch models when provider, URL, or API key changes
                     do {
-                        let models = try await GeminiAPI.shared.getAvailableModels(apiKey: draftApiKey)
+                        let models = try await LLMManager.shared.getAvailableModels(provider: draftProvider, customURL: draftCustomURL, apiKey: draftApiKey)
                         availableModels = models
                         if !models.contains(where: { $0.name == draftModelName }), let first = models.first {
                             draftModelName = first.name
@@ -210,7 +268,7 @@ struct GeneralTab: View {
                     }
                 }
                 
-                Section("History") {
+                Section(header: Text("History").font(.headline).fontWeight(.bold).foregroundColor(.primary)) {
                     Picker("Store Past Chats", selection: $draftHistoryLimit) {
                         Text("Don't store history").tag(0)
                         Text("Store 20 chats").tag(20)
@@ -224,6 +282,8 @@ struct GeneralTab: View {
             HStack {
                 Spacer()
                 Button("Save Settings") {
+                    settings.apiProvider = draftProvider
+                    settings.customBaseURL = draftCustomURL
                     settings.apiKey = draftApiKey
                     settings.modelName = draftModelName
                     settings.historyLimit = draftHistoryLimit

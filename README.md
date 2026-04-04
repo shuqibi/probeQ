@@ -8,7 +8,7 @@
 
 Probing the unknown with conversational AI power.
 
-A lightweight macOS menu bar utility that lets you grab text from anywhere on your screen and process it with Google Gemini — translate, polish, search, or just chat.
+A lightweight macOS menu bar utility that lets you grab text from anywhere on your screen and process it with Universal AI Models (Gemini, DeepSeek, OpenAI, Groq, Kimi, and more) — translate, polish, search, or just chat.
 
 ## Features
 
@@ -16,7 +16,7 @@ A lightweight macOS menu bar utility that lets you grab text from anywhere on yo
 - **Text Selection** — Highlight text in any app, press a shortcut, and send it directly to Gemini
 - **Global Shortcuts** — Customizable keybindings that work from any application
 - **Chat Interface** — Continue the conversation with follow-up questions
-- **Models Selection (now only Gemini)** — Model list fetched live from Google's API
+- **Universal AI Models** — Full support for Google Gemini, DeepSeek, OpenAI, Moonshot (Kimi), Groq, Grok (xAI), Zhipu (GLM), Qwen, and Custom OpenAI API Endpoints! Model lists are automatically fetched live.
 - **History** — Configurable session history (0 / 20 / 50 chats)
 
 ## Demo
@@ -29,7 +29,7 @@ A lightweight macOS menu bar utility that lets you grab text from anywhere on yo
 
 ## Setup
 
-1. Get a [Gemini API Key](https://aistudio.google.com/apikey)
+1. Get an API Key from your chosen provider (e.g. [DeepSeek](https://platform.deepseek.com), [Gemini](https://aistudio.google.com/apikey), or [OpenAI](https://platform.openai.com))
 2. Download the latest release or build from source
 3. Open the app → click the menu bar icon → Settings → paste your API key → Save
 4. Grant **Accessibility** permission when prompted (required for global shortcuts)
@@ -70,7 +70,7 @@ All shortcuts are fully customizable in Settings → Shortcuts.
 
 - macOS 13+
 - Xcode 15+ (to build)
-- Gemini API key
+- API key for Gemini, DeepSeek, OpenAI, or any compatible provider
 
 ## License
 

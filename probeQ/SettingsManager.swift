@@ -43,12 +43,45 @@ struct ShortcutBinding: Codable, Equatable {
 class SettingsManager: ObservableObject {
     static let shared = SettingsManager()
     
+    @Published var apiProvider: String {
+        didSet { UserDefaults.standard.set(apiProvider, forKey: "probeQ_apiProvider") }
+    }
+    
+    @Published var customBaseURL: String {
+        didSet { UserDefaults.standard.set(customBaseURL, forKey: "probeQ_customBaseURL") }
+    }
+    
     @Published var apiKey: String {
         didSet { UserDefaults.standard.set(apiKey, forKey: "probeQ_apiKey") }
     }
     
     @Published var modelName: String {
         didSet { UserDefaults.standard.set(modelName, forKey: "probeQ_modelName") }
+    }
+    
+    // Per-provider memory helpers
+    func getProviderAPIKey(_ provider: String) -> String {
+        if let key = UserDefaults.standard.string(forKey: "probeQ_apiKey_\(provider)") { return key }
+        return provider == apiProvider ? apiKey : ""
+    }
+    func setProviderAPIKey(_ key: String, for provider: String) {
+        UserDefaults.standard.set(key, forKey: "probeQ_apiKey_\(provider)")
+    }
+    
+    func getProviderModel(_ provider: String) -> String {
+        if let model = UserDefaults.standard.string(forKey: "probeQ_modelName_\(provider)") { return model }
+        return provider == apiProvider ? modelName : ""
+    }
+    func setProviderModel(_ model: String, for provider: String) {
+        UserDefaults.standard.set(model, forKey: "probeQ_modelName_\(provider)")
+    }
+    
+    func getProviderBaseURL(_ provider: String) -> String {
+        if let url = UserDefaults.standard.string(forKey: "probeQ_customBaseURL_\(provider)") { return url }
+        return provider == apiProvider ? customBaseURL : ""
+    }
+    func setProviderBaseURL(_ url: String, for provider: String) {
+        UserDefaults.standard.set(url, forKey: "probeQ_customBaseURL_\(provider)")
     }
     
     @Published var historyLimit: Int {
@@ -86,6 +119,8 @@ class SettingsManager: ObservableObject {
     
     private init() {
         let oldKey = UserDefaults.standard.string(forKey: "geminiAPIKey")
+        self.apiProvider = UserDefaults.standard.string(forKey: "probeQ_apiProvider") ?? "none"
+        self.customBaseURL = UserDefaults.standard.string(forKey: "probeQ_customBaseURL") ?? ""
         self.apiKey = UserDefaults.standard.string(forKey: "probeQ_apiKey") ?? oldKey ?? ""
         self.modelName = UserDefaults.standard.string(forKey: "probeQ_modelName") ?? "gemini-2.5-flash"
         self.historyLimit = UserDefaults.standard.object(forKey: "probeQ_historyLimit") as? Int ?? 20
